@@ -909,6 +909,8 @@ document.getElementById("ut-screenshot-btn").onclick = async (e) => {
     const canvas = await html2canvas(wrapper, {
       backgroundColor: null,
       scale: 2, // 高画質化
+      useCORS: true,
+      logging: true,
     });
 
     // DOMとUIを元に戻す
