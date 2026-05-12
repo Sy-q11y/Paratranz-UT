@@ -9,8 +9,8 @@ document.querySelectorAll("#ut-preview-style").forEach(el => el.remove());
 let lastActiveTranslationEl = null;
 let currentDisplayedText = null;
 let metadata = null;
-// let bunruiData = null;
-// let keyToBunruiMap = {};
+let bunruiData = null;
+let keyToBunruiMap = {};
 
 const SOUND_MAPPING = {
   sndfnt_default: "snd_talk_default",
@@ -30,7 +30,6 @@ async function loadMetadata() {
     console.error("UT Preview: Failed to load metadata", e);
   }
   
-  /*
   try {
     const response = await fetch(chrome.runtime.getURL("assets/bunrui.json"));
     bunruiData = await response.json();
@@ -43,7 +42,6 @@ async function loadMetadata() {
   } catch (e) {
     console.error("UT Preview: Failed to load bunrui.json", e);
   }
-  */
 }
 loadMetadata();
 
@@ -132,7 +130,6 @@ style.textContent = `
         overflow: hidden; opacity: 0; pointer-events: none; border: none; box-shadow: none;
     }
 
-    /*
     #ut-bunrui-tag {
         position: absolute; top: -28px; left: 35px;
         background: black; color: #ffeb3b; border: 2px solid white; border-bottom: none;
@@ -142,9 +139,8 @@ style.textContent = `
         z-index: 5; white-space: nowrap; display: none;
     }
     #ut-bunrui-tag.visible { display: block; }
-    */
     
-    #ut-settings-toggle-btn, #ut-play-btn, #ut-close-btn {
+    #ut-settings-toggle-btn, #ut-play-btn, #ut-copy-btn, #ut-close-btn {
         position: absolute; top: -28px;
         background: black; color: white; border: 2px solid white;
         border-radius: 0; padding: 2px 8px; font-size: 12px;
@@ -155,8 +151,9 @@ style.textContent = `
     #ut-close-btn { right: -2px; color: #ff8888; font-weight: bold; }
     #ut-settings-toggle-btn { right: 40px; }
     #ut-play-btn { right: 100px; }
+    #ut-copy-btn { right: 175px; }
     
-    #ut-settings-toggle-btn:hover, #ut-play-btn:hover, #ut-close-btn:hover { background: #333; }
+    #ut-settings-toggle-btn:hover, #ut-play-btn:hover, #ut-copy-btn:hover, #ut-close-btn:hover { background: #333; }
     #ut-close-btn:hover { color: white; }
 
     #ut-drag-handle {
@@ -236,7 +233,8 @@ root.innerHTML = `
     </div>
     <div id="ut-main-box">
         <button id="ut-drag-handle" title="ドラッグして移動">≡</button>
-        <!-- <span id="ut-bunrui-tag"></span> -->
+        <span id="ut-bunrui-tag"></span>
+        <button id="ut-copy-btn" title="クリップボードにコピー"><img src="${chrome.runtime.getURL('assets/clipboard.png')}" style="width: 12px; height: 12px; vertical-align: sub; margin-right: 2px;"> コピー</button>
         <button id="ut-play-btn" title="ショートカット: Alt+P"><span style="display:inline-block; transform:rotate(90deg); font-size:10px; margin-right:2px;">▲</span> 再生</button>
         <button id="ut-settings-toggle-btn" title="設定を表示/非表示">設定</button>
         <button id="ut-close-btn" title="閉じる (Alt+U)">×</button>
@@ -263,7 +261,7 @@ faceImg.parentNode.insertBefore(faceStillCanvas, faceImg);
 
 const bubbleImg = document.getElementById("ut-bubble-img");
 const status = document.getElementById("ut-status");
-// const bunruiTag = document.getElementById("ut-bunrui-tag");
+const bunruiTag = document.getElementById("ut-bunrui-tag");
 const presetSelect = document.getElementById("ut-preset-select");
 const modeSelect = document.getElementById("ut-mode-select");
 const bubbleSelect = document.getElementById("ut-bubble-select");
@@ -772,11 +770,9 @@ function updatePreview() {
     renderWarnings(text);
 
     if (key) {
-      /*
       const bunruiStr = keyToBunruiMap && keyToBunruiMap[key] ? keyToBunruiMap[key] : "未分類";
       bunruiTag.textContent = bunruiStr;
       bunruiTag.classList.add("visible");
-      */
       
       if (hasMetadata || (metadata && metadata[key])) {
         status.textContent = "ID: " + key;
@@ -786,7 +782,7 @@ function updatePreview() {
         status.style.color = "#aaa";
       }
     } else {
-      // bunruiTag.classList.remove("visible");
+      bunruiTag.classList.remove("visible");
     }
     console.log("UT Preview: updatePreview done");
   } catch (e) {
@@ -876,6 +872,20 @@ document.addEventListener("input", updatePreview);
 document.getElementById("ut-play-btn").onclick = (e) => {
   e.currentTarget.blur();
   playText();
+};
+document.getElementById("ut-copy-btn").onclick = (e) => {
+  e.currentTarget.blur();
+  const text = getTargetText();
+  if (text) {
+    const checkText = text.replace(pauseRegex, "").replace(/#/g, "\n");
+    navigator.clipboard.writeText(checkText).then(() => {
+      const originalText = e.currentTarget.innerHTML;
+      e.currentTarget.innerHTML = '<span style="color:#88ff88;">コピーしました</span>';
+      setTimeout(() => {
+        e.currentTarget.innerHTML = originalText;
+      }, 1500);
+    });
+  }
 };
 document.getElementById("ut-settings-toggle-btn").onclick = () => {
   const panel = document.querySelector(".ut-panel");
