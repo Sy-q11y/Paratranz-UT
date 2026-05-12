@@ -879,20 +879,44 @@ document.getElementById("ut-screenshot-btn").onclick = async (e) => {
   e.currentTarget.blur();
   const btn = e.currentTarget;
   const originalText = btn.innerHTML;
-  btn.innerHTML = '<span style="color:#ffeb3b;">撮影中...</span>';
+  btn.innerHTML = '<span style="color:#ffeb3b; font-size:10px;">📸...</span>';
   
+  const mainBox = document.getElementById("ut-main-box");
+  
+  // スクショに不要なUIボタンやタグを一時的に非表示
+  const uiElements = mainBox.querySelectorAll('button, #ut-bunrui-tag');
+  const originalDisplays = [];
+  uiElements.forEach(el => {
+    originalDisplays.push(el.style.display);
+    el.style.display = 'none';
+  });
+
+  // 外側の黒枠(box-shadow: 4px)が見切れないように、一時的なラッパーで包んで余白を持たせる
+  const wrapper = document.createElement("div");
+  wrapper.style.padding = "4px";
+  wrapper.style.display = "inline-block";
+  wrapper.style.backgroundColor = "transparent";
+  
+  mainBox.parentNode.insertBefore(wrapper, mainBox);
+  wrapper.appendChild(mainBox);
+
   try {
-    const canvas = await html2canvas(document.getElementById("ut-main-box"), {
+    const canvas = await html2canvas(wrapper, {
       backgroundColor: null,
       scale: 2 // 高画質化
     });
+    
+    // DOMとUIを元に戻す
+    wrapper.parentNode.insertBefore(mainBox, wrapper);
+    wrapper.remove();
+    uiElements.forEach((el, i) => el.style.display = originalDisplays[i]);
     
     canvas.toBlob(async (blob) => {
       try {
         await navigator.clipboard.write([
           new ClipboardItem({ 'image/png': blob })
         ]);
-        btn.innerHTML = '<span style="color:#88ff88;">コピー完了！</span>';
+        btn.innerHTML = '<span style="color:#88ff88; font-size:10px;">完了</span>';
       } catch (err) {
         console.warn("Clipboard write failed, downloading instead", err);
         const url = URL.createObjectURL(blob);
@@ -901,13 +925,18 @@ document.getElementById("ut-screenshot-btn").onclick = async (e) => {
         a.download = `ut_preview_${getCurrentKey() || 'no_id'}.png`;
         a.click();
         URL.revokeObjectURL(url);
-        btn.innerHTML = '<span style="color:#88ff88;">保存完了！</span>';
+        btn.innerHTML = '<span style="color:#88ff88; font-size:10px;">保存</span>';
       }
       setTimeout(() => { btn.innerHTML = originalText; }, 2000);
     }, 'image/png');
   } catch (err) {
     console.error("Screenshot failed", err);
-    btn.innerHTML = '<span style="color:#ff5555;">失敗</span>';
+    // エラー時も確実に戻す
+    wrapper.parentNode.insertBefore(mainBox, wrapper);
+    wrapper.remove();
+    uiElements.forEach((el, i) => el.style.display = originalDisplays[i]);
+    
+    btn.innerHTML = '<span style="color:#ff5555; font-size:10px;">失敗</span>';
     setTimeout(() => { btn.innerHTML = originalText; }, 2000);
   }
 };
