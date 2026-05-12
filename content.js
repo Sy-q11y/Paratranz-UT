@@ -131,7 +131,7 @@ style.textContent = `
     }
 
     #ut-bunrui-tag {
-        position: absolute; top: -28px; left: 35px;
+        position: absolute; top: -28px; left: 55px;
         background: black; color: #ffeb3b; border: 2px solid white; border-bottom: none;
         border-radius: 0; padding: 2px 8px; font-size: 12px;
         font-family: 'UT-Font-Default', sans-serif;
