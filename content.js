@@ -140,7 +140,7 @@ style.textContent = `
     }
     #ut-bunrui-tag.visible { display: block; }
     
-    #ut-settings-toggle-btn, #ut-play-btn, #ut-copy-btn, #ut-close-btn {
+    #ut-settings-toggle-btn, #ut-play-btn, #ut-copy-btn, #ut-screenshot-btn, #ut-close-btn {
         position: absolute; top: -28px;
         background: black; color: white; border: 2px solid white;
         border-radius: 0; padding: 2px 8px; font-size: 12px;
@@ -151,9 +151,10 @@ style.textContent = `
     #ut-close-btn { right: -2px; color: #ff8888; font-weight: bold; }
     #ut-settings-toggle-btn { right: 40px; }
     #ut-play-btn { right: 100px; }
-    #ut-copy-btn { right: 175px; }
+    #ut-copy-btn { right: 165px; }
+    #ut-screenshot-btn { right: 205px; }
     
-    #ut-settings-toggle-btn:hover, #ut-play-btn:hover, #ut-copy-btn:hover, #ut-close-btn:hover { background: #333; }
+    #ut-settings-toggle-btn:hover, #ut-play-btn:hover, #ut-copy-btn:hover, #ut-screenshot-btn:hover, #ut-close-btn:hover { background: #333; }
     #ut-close-btn:hover { color: white; }
 
     #ut-drag-handle {
@@ -234,7 +235,8 @@ root.innerHTML = `
     <div id="ut-main-box">
         <button id="ut-drag-handle" title="ドラッグして移動">≡</button>
         <span id="ut-bunrui-tag"></span>
-        <button id="ut-copy-btn" title="クリップボードにコピー"><img src="${chrome.runtime.getURL('assets/clipboard.png')}" style="width: 12px; height: 12px; vertical-align: sub; margin-right: 2px;"> コピー</button>
+        <button id="ut-screenshot-btn" title="画像をクリップボードにコピー"><img src="${chrome.runtime.getURL('assets/camera.png')}" style="width: 14px; height: 14px; vertical-align: middle;"></button>
+        <button id="ut-copy-btn" title="テキストをクリップボードにコピー"><img src="${chrome.runtime.getURL('assets/clipboard.png')}" style="width: 14px; height: 14px; vertical-align: middle;"></button>
         <button id="ut-play-btn" title="ショートカット: Alt+P"><span style="display:inline-block; transform:rotate(90deg); font-size:10px; margin-right:2px;">▲</span> 再生</button>
         <button id="ut-settings-toggle-btn" title="設定を表示/非表示">設定</button>
         <button id="ut-close-btn" title="閉じる (Alt+U)">×</button>
@@ -873,6 +875,43 @@ document.getElementById("ut-play-btn").onclick = (e) => {
   e.currentTarget.blur();
   playText();
 };
+document.getElementById("ut-screenshot-btn").onclick = async (e) => {
+  e.currentTarget.blur();
+  const btn = e.currentTarget;
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '<span style="color:#ffeb3b;">撮影中...</span>';
+  
+  try {
+    const canvas = await html2canvas(document.getElementById("ut-main-box"), {
+      backgroundColor: null,
+      scale: 2 // 高画質化
+    });
+    
+    canvas.toBlob(async (blob) => {
+      try {
+        await navigator.clipboard.write([
+          new ClipboardItem({ 'image/png': blob })
+        ]);
+        btn.innerHTML = '<span style="color:#88ff88;">コピー完了！</span>';
+      } catch (err) {
+        console.warn("Clipboard write failed, downloading instead", err);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `ut_preview_${getCurrentKey() || 'no_id'}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+        btn.innerHTML = '<span style="color:#88ff88;">保存完了！</span>';
+      }
+      setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+    }, 'image/png');
+  } catch (err) {
+    console.error("Screenshot failed", err);
+    btn.innerHTML = '<span style="color:#ff5555;">失敗</span>';
+    setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+  }
+};
+
 document.getElementById("ut-copy-btn").onclick = (e) => {
   e.currentTarget.blur();
   const text = getTargetText();
