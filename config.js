@@ -33,16 +33,16 @@ const UT_CONFIG = {
   LAYOUT: {
     // ① ノーマルモード（顔画像あり）
     normalWithFace: {
-      width: 600,
-      height: 150,
+      width: 578,
+      height: 152,
       padding: "20px",
       letterSpacing: "0px",
       lineHeight: "1.2",
     },
     // ② ノーマルモード（顔画像なし）
     normalWithoutFace: {
-      width: 600,
-      height: 150,
+      width: 578,
+      height: 152,
       padding: "20px 40px 20px 20px",
       letterSpacing: "0px",
       lineHeight: "1.2",
@@ -100,6 +100,10 @@ const UT_CONFIG = {
     halfQuotes: {
       jp: `クオーテーションマークは全角(“”)ではないですか？`,
       en: `Should quotation marks be full-width (“”)?`,
+    },
+    wrongQuoteOrder: {
+      jp: `”“の順番が逆になっています（正：“テキスト” / 誤：”テキスト“）`,
+      en: `The order of ” and “ is reversed (correct: “text”, wrong: ”text“).`,
     },
     spaceAfterQuestion: {
       jp: `！と？の後には全角スペースが必要です`,

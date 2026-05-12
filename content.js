@@ -1,10 +1,9 @@
 // --- 二重生成防止（古いUIの削除） ---
-document.querySelectorAll("#ut-root").forEach(el => el.remove());
+document.querySelectorAll("#ut-root").forEach((el) => el.remove());
 
-document.querySelectorAll("#ut-floating-open-btn").forEach(el => el.remove());
+document.querySelectorAll("#ut-floating-open-btn").forEach((el) => el.remove());
 
-document.querySelectorAll("#ut-preview-style").forEach(el => el.remove());
-
+document.querySelectorAll("#ut-preview-style").forEach((el) => el.remove());
 
 let lastActiveTranslationEl = null;
 let currentDisplayedText = null;
@@ -29,7 +28,7 @@ async function loadMetadata() {
   } catch (e) {
     console.error("UT Preview: Failed to load metadata", e);
   }
-  
+
   try {
     const response = await fetch(chrome.runtime.getURL("assets/bunrui.json"));
     bunruiData = await response.json();
@@ -101,7 +100,8 @@ Object.keys(UT_CONFIG.PRESETS).forEach((key) => {
 
 // Google Fonts 注入
 const googleFontLink = document.createElement("link");
-googleFontLink.href = "https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap";
+googleFontLink.href =
+  "https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap";
 googleFontLink.rel = "stylesheet";
 document.head.appendChild(googleFontLink);
 
@@ -235,8 +235,8 @@ root.innerHTML = `
     <div id="ut-main-box">
         <button id="ut-drag-handle" title="ドラッグして移動">≡</button>
         <span id="ut-bunrui-tag"></span>
-        <button id="ut-screenshot-btn" title="画像をクリップボードにコピー"><img src="${chrome.runtime.getURL('assets/camera.png')}" style="width: 14px; height: 14px; vertical-align: middle;"></button>
-        <button id="ut-copy-btn" title="テキストをクリップボードにコピー"><img src="${chrome.runtime.getURL('assets/clipboard.png')}" style="width: 14px; height: 14px; vertical-align: middle;"></button>
+        <button id="ut-screenshot-btn" title="画像をクリップボードにコピー"><img src="${chrome.runtime.getURL("assets/camera.png")}" style="width: 14px; height: 14px; vertical-align: middle;"></button>
+        <button id="ut-copy-btn" title="テキストをクリップボードにコピー"><img src="${chrome.runtime.getURL("assets/clipboard.png")}" style="width: 14px; height: 14px; vertical-align: middle;"></button>
         <button id="ut-play-btn" title="ショートカット: Alt+P"><span style="display:inline-block; transform:rotate(90deg); font-size:10px; margin-right:2px;">▲</span> 再生</button>
         <button id="ut-settings-toggle-btn" title="設定を表示/非表示">設定</button>
         <button id="ut-close-btn" title="閉じる (Alt+U)">×</button>
@@ -509,6 +509,10 @@ function runStyleCheck(text) {
   if (/["']/.test(checkText)) {
     warnings.push(msg.halfQuotes);
   }
+  // \u201d\u2019\u304c\u958b\u304d\u5f15\u7528\u7b26\u306a\u3057\u306b\u5148\u306b\u73fe\u308c\u308b\u5834\u5408\uff08\u9806\u756a\u9006\uff09\u3092\u691c\u77e5
+  if (/\u201d[^\u201d\u201c]*\u201c/.test(checkText)) {
+    warnings.push(msg.wrongQuoteOrder);
+  }
   if (/[？！](?![？！\n\r　)）]|$)/.test(checkText)) {
     warnings.push(msg.spaceAfterQuestion);
   }
@@ -593,8 +597,8 @@ function applyLayoutAndStyle() {
     // 吹き出し画像本来のサイズを2倍にして使用する
     const updateBubbleSize = () => {
       if (bubbleImg.naturalWidth) {
-        mainBox.style.width = (bubbleImg.naturalWidth * 2) + "px";
-        mainBox.style.height = (bubbleImg.naturalHeight * 2) + "px";
+        mainBox.style.width = bubbleImg.naturalWidth * 2 + "px";
+        mainBox.style.height = bubbleImg.naturalHeight * 2 + "px";
       }
     };
     bubbleImg.onload = updateBubbleSize;
@@ -631,7 +635,7 @@ function applyLayoutAndStyle() {
   let antialias = currentConfig.antialias === true;
 
   const preset = UT_CONFIG.PRESETS[presetSelect.value];
-  
+
   if (mode === "battle") {
     // バトルモード時は常に BIZ UDPGothic (Bold) を使用
     textDisplay.style.fontFamily = "'BIZ UDPGothic', sans-serif";
@@ -772,10 +776,11 @@ function updatePreview() {
     renderWarnings(text);
 
     if (key) {
-      const bunruiStr = keyToBunruiMap && keyToBunruiMap[key] ? keyToBunruiMap[key] : "未分類";
+      const bunruiStr =
+        keyToBunruiMap && keyToBunruiMap[key] ? keyToBunruiMap[key] : "未分類";
       bunruiTag.textContent = bunruiStr;
       bunruiTag.classList.add("visible");
-      
+
       if (hasMetadata || (metadata && metadata[key])) {
         status.textContent = "ID: " + key;
         status.style.color = "#88ff88";
@@ -880,15 +885,15 @@ document.getElementById("ut-screenshot-btn").onclick = async (e) => {
   const btn = e.currentTarget;
   const originalText = btn.innerHTML;
   btn.innerHTML = '<span style="color:#ffeb3b; font-size:10px;">📸...</span>';
-  
+
   const mainBox = document.getElementById("ut-main-box");
-  
+
   // スクショに不要なUIボタンやタグを一時的に非表示
-  const uiElements = mainBox.querySelectorAll('button, #ut-bunrui-tag');
+  const uiElements = mainBox.querySelectorAll("button, #ut-bunrui-tag");
   const originalDisplays = [];
-  uiElements.forEach(el => {
+  uiElements.forEach((el) => {
     originalDisplays.push(el.style.display);
-    el.style.display = 'none';
+    el.style.display = "none";
   });
 
   // 外側の黒枠(box-shadow: 4px)が見切れないように、一時的なラッパーで包んで余白を持たせる
@@ -896,48 +901,54 @@ document.getElementById("ut-screenshot-btn").onclick = async (e) => {
   wrapper.style.padding = "4px";
   wrapper.style.display = "inline-block";
   wrapper.style.backgroundColor = "transparent";
-  
+
   mainBox.parentNode.insertBefore(wrapper, mainBox);
   wrapper.appendChild(mainBox);
 
   try {
     const canvas = await html2canvas(wrapper, {
       backgroundColor: null,
-      scale: 2 // 高画質化
+      scale: 2, // 高画質化
     });
-    
+
     // DOMとUIを元に戻す
     wrapper.parentNode.insertBefore(mainBox, wrapper);
     wrapper.remove();
-    uiElements.forEach((el, i) => el.style.display = originalDisplays[i]);
-    
+    uiElements.forEach((el, i) => (el.style.display = originalDisplays[i]));
+
     canvas.toBlob(async (blob) => {
       try {
         await navigator.clipboard.write([
-          new ClipboardItem({ 'image/png': blob })
+          new ClipboardItem({ "image/png": blob }),
         ]);
-        btn.innerHTML = '<span style="color:#88ff88; font-size:10px;">完了</span>';
+        btn.innerHTML =
+          '<span style="color:#88ff88; font-size:10px;">完了</span>';
       } catch (err) {
         console.warn("Clipboard write failed, downloading instead", err);
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `ut_preview_${getCurrentKey() || 'no_id'}.png`;
+        a.download = `ut_preview_${getCurrentKey() || "no_id"}.png`;
         a.click();
         URL.revokeObjectURL(url);
-        btn.innerHTML = '<span style="color:#88ff88; font-size:10px;">保存</span>';
+        btn.innerHTML =
+          '<span style="color:#88ff88; font-size:10px;">保存</span>';
       }
-      setTimeout(() => { btn.innerHTML = originalText; }, 2000);
-    }, 'image/png');
+      setTimeout(() => {
+        btn.innerHTML = originalText;
+      }, 2000);
+    }, "image/png");
   } catch (err) {
     console.error("Screenshot failed", err);
     // エラー時も確実に戻す
     wrapper.parentNode.insertBefore(mainBox, wrapper);
     wrapper.remove();
-    uiElements.forEach((el, i) => el.style.display = originalDisplays[i]);
-    
+    uiElements.forEach((el, i) => (el.style.display = originalDisplays[i]));
+
     btn.innerHTML = '<span style="color:#ff5555; font-size:10px;">失敗</span>';
-    setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+    setTimeout(() => {
+      btn.innerHTML = originalText;
+    }, 2000);
   }
 };
 
@@ -948,7 +959,8 @@ document.getElementById("ut-copy-btn").onclick = (e) => {
     const checkText = text.replace(pauseRegex, "").replace(/#/g, "\n");
     navigator.clipboard.writeText(checkText).then(() => {
       const originalText = e.currentTarget.innerHTML;
-      e.currentTarget.innerHTML = '<span style="color:#88ff88;">コピーしました</span>';
+      e.currentTarget.innerHTML =
+        '<span style="color:#88ff88;">コピーしました</span>';
       setTimeout(() => {
         e.currentTarget.innerHTML = originalText;
       }, 1500);
@@ -1025,7 +1037,7 @@ dragHandle.addEventListener("mousedown", (e) => {
   isDraggingBox = true;
   dragStartX = e.clientX;
   dragStartY = e.clientY;
-  
+
   const rect = root.getBoundingClientRect();
   if (root.style.transform !== "none") {
     root.style.transform = "none";
@@ -1033,7 +1045,7 @@ dragHandle.addEventListener("mousedown", (e) => {
     root.style.top = rect.top + "px";
     root.style.bottom = "auto";
   }
-  
+
   initialLeft = parseFloat(root.style.left) || rect.left;
   initialTop = parseFloat(root.style.top) || rect.top;
   e.preventDefault();
@@ -1043,8 +1055,8 @@ document.addEventListener("mousemove", (e) => {
   if (!isDraggingBox) return;
   const dx = e.clientX - dragStartX;
   const dy = e.clientY - dragStartY;
-  root.style.left = (initialLeft + dx) + "px";
-  root.style.top = (initialTop + dy) + "px";
+  root.style.left = initialLeft + dx + "px";
+  root.style.top = initialTop + dy + "px";
   root.style.bottom = "auto";
 });
 
