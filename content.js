@@ -15,6 +15,96 @@ const SOUND_MAPPING = {
   sndfnt_default: "snd_talk_default",
 };
 
+let paraTranzIdToKeyMap = {};
+let categoryStats = {}; // { category: { total: 0, translated: 0 } }
+
+// --- ParaTranz APIからキー一覧を取得して同期する ---
+async function loadParaTranzKeys() {
+  // 分類データのロード完了を待機
+  while (!bunruiData) {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const fileId = urlParams.get("file");
+  const projectMatch = window.location.pathname.match(/\/projects\/(\d+)/);
+
+  if (!projectMatch || !fileId) return;
+
+  const projectId = projectMatch[1];
+  let page = 1;
+  let hasMore = true;
+  let totalLoaded = 0;
+
+  categoryStats = {}; // リセット
+
+  console.log("UT Preview: Syncing keys with ParaTranz API for file", fileId);
+
+  while (hasMore) {
+    const apiUrl = `https://paratranz.cn/api/projects/${projectId}/strings?detailed=1&file=${fileId}&page=${page}&pageSize=20000`;
+
+    try {
+      const response = await fetch(apiUrl);
+      const data = await response.json();
+
+      if (data && data.results && data.results.length > 0) {
+        data.results.forEach((item) => {
+          if (item.id && item.key) {
+            paraTranzIdToKeyMap[item.id] = item.key;
+            totalLoaded++;
+
+            // 統計の集計
+            const cat = keyToBunruiMap[item.key] || "未分類";
+            if (!categoryStats[cat]) {
+              categoryStats[cat] = { total: 0, translated: 0, items: [] };
+            }
+            categoryStats[cat].total++;
+            categoryStats[cat].items.push({
+              id: item.id,
+              key: item.key,
+              isTranslated: item.stage > 0,
+            });
+
+            // ParaTranzの stage: 0=未翻訳, 1=翻訳済み, 2=疑問, 3=査読済み, 5=承認済み
+            if (item.stage > 0) {
+              categoryStats[cat].translated++;
+            }
+          }
+        });
+
+        if (totalLoaded >= data.count || data.results.length === 0) {
+          hasMore = false;
+        } else {
+          page++;
+        }
+        updateStatsUI(); // ページごとにUIを更新（リアルタイム進捗）
+      } else {
+        hasMore = false;
+      }
+    } catch (e) {
+      console.error("UT Preview: API Sync failed at page", page, e);
+      hasMore = false;
+    }
+    if (page > 1000) break;
+  }
+  console.log("UT Preview: Sync complete.", totalLoaded, "keys mapped.");
+  updateStatsUI(); // 最終更新
+}
+loadParaTranzKeys();
+
+// --- URL変更を監視して、ファイルが切り替わったら再同期する ---
+let lastFileId = new URLSearchParams(window.location.search).get("file");
+setInterval(() => {
+  const currentFileId = new URLSearchParams(window.location.search).get("file");
+  if (currentFileId && currentFileId !== lastFileId) {
+    lastFileId = currentFileId;
+    console.log("UT Preview: File changed. Re-syncing all keys...");
+    paraTranzIdToKeyMap = {};
+    categoryStats = {};
+    loadParaTranzKeys();
+  }
+}, 2000);
+
 // --- metadata.json と bunrui.json のロード ---
 async function loadMetadata() {
   try {
@@ -209,6 +299,27 @@ style.textContent = `
         font-size: 10px; color: #aaa; font-weight: bold; min-width: 70px; text-align: center;
         overflow: hidden; text-overflow: ellipsis;
     }
+
+    #ut-stats-panel {
+        width: 100%; max-width: 700px; background: rgba(0, 0, 0, 0.9); color: white;
+        padding: 15px; border: 2px solid white; margin-top: 10px;
+        font-family: sans-serif; font-size: 13px; display: none; box-sizing: border-box;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+    }
+    #ut-stats-content { max-height: 400px; overflow-y: auto; padding-right: 5px; }
+    /* スクロールバーの装飾 */
+    #ut-stats-content::-webkit-scrollbar { width: 8px; }
+    #ut-stats-content::-webkit-scrollbar-track { background: #222; }
+    #ut-stats-content::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
+    #ut-stats-content::-webkit-scrollbar-thumb:hover { background: #777; }
+    
+    #ut-stats-table { width: 100%; border-collapse: collapse; }
+    #ut-stats-table th, #ut-stats-table td { padding: 6px 10px; border: 1px solid #444; text-align: left; }
+    #ut-stats-table th { background: #222; color: #ffeb3b; position: sticky; top: 0; z-index: 10; }
+    .progress-bar-bg { width: 100px; height: 10px; background: #333; display: inline-block; vertical-align: middle; margin-right: 8px; border: 1px solid #666; }
+    .progress-bar-fill { height: 100%; background: #4caf50; }
+    .cat-name { color: #ffeb3b; font-weight: bold; }
+    .cat-count { color: #aaa; font-size: 11px; margin-left: 5px; }
 `;
 document.head.appendChild(style);
 
@@ -230,7 +341,13 @@ root.innerHTML = `
             <button id="ut-style-lang-btn" title="言語切り替え">🌐 JP</button>
         </div>
         
+        <button id="ut-stats-toggle-btn" title="分類別進捗を表示"><img src="${chrome.runtime.getURL("assets/graph.png")}" style="width:14px; height:14px; vertical-align:middle;"></button>
+        
         <span id="ut-status"></span>
+    </div>
+    <div id="ut-stats-panel">
+        <h3 style="margin:0 0 12px 0; font-size:16px; border-bottom:1px solid #444; padding-bottom:8px;">📊 分類別進捗 (このファイル内)</h3>
+        <div id="ut-stats-content">同期中...</div>
     </div>
     <div id="ut-main-box">
         <button id="ut-drag-handle" title="ドラッグして移動">≡</button>
@@ -303,7 +420,23 @@ function getCurrentKey() {
     return null;
   }
 
-  // 1. エディタ画面（コンテキストタブ）から探す（最も確実）
+  // --- 0. APIから取得したIDマップから探す（最速・最高精度） ---
+  const row = target.closest(
+    'tr, .row.string, [role="row"], .item, .string-item',
+  );
+  if (row) {
+    const ptId = row.getAttribute("data-id");
+    if (ptId && paraTranzIdToKeyMap[ptId]) {
+      return paraTranzIdToKeyMap[ptId];
+    }
+    // チェックボックスのvalueからIDを取得するパターン
+    const checkbox = row.querySelector('input[type="checkbox"]');
+    if (checkbox && checkbox.value && paraTranzIdToKeyMap[checkbox.value]) {
+      return paraTranzIdToKeyMap[checkbox.value];
+    }
+  }
+
+  // --- 1. エディタ画面（コンテキストタブ）から探す（APIがまだの場合のフォールバック） ---
   const contextKeyEl = document.querySelector(
     ".context-tab td.notranslate.text-monospace",
   );
@@ -315,10 +448,7 @@ function getCurrentKey() {
     }
   }
 
-  // 2. 行要素（row）を探す
-  const row = target.closest(
-    'tr, .row.string, [role="row"], .item, .string-item',
-  );
+  // 2. 行要素（row）を探す（DOMから直接キーを探すパターン）
   if (row) {
     // 行自体の title 属性にキーが含まれている場合（一覧画面）
     if (row.hasAttribute("title")) {
@@ -1088,5 +1218,112 @@ chrome.storage.local.get(["utPosX", "utPosY", "utPosBottom", "utTransform"], (re
   }
 });
 */
+
+const statsPanel = document.getElementById("ut-stats-panel");
+const statsContent = document.getElementById("ut-stats-content");
+const statsToggleBtn = document.getElementById("ut-stats-toggle-btn");
+
+statsToggleBtn.onclick = () => {
+  const mainBox = document.getElementById("ut-main-box");
+  const warnings = document.getElementById("ut-warnings-container");
+  const isOpening = statsPanel.style.display !== "block";
+
+  if (isOpening) {
+    statsPanel.style.display = "block";
+    if (mainBox) mainBox.style.display = "none";
+    if (warnings) warnings.style.display = "none";
+  } else {
+    statsPanel.style.display = "none";
+    if (mainBox) mainBox.style.display = "flex";
+    // 警告は updatePreview() で自動制御されるのでここでは何もしない
+  }
+};
+
+function updateStatsUI() {
+  if (!statsContent) return;
+
+  const categoryOrder = [
+    "ゲーム開始",
+    "いせき",
+    "やみのいせき",
+    "さきゅう",
+    "スチームワークス",
+    "ホットランド / ニューホーム",
+    "システム",
+    "その他",
+  ];
+
+  const sortedCats = Object.entries(categoryStats).sort((a, b) => {
+    const getOrderIndex = (catName) => {
+      for (let i = 0; i < categoryOrder.length; i++) {
+        if (catName.startsWith(categoryOrder[i])) return i;
+      }
+      return categoryOrder.length; // 定義にないものや未分類は最後
+    };
+
+    const indexA = getOrderIndex(a[0]);
+    const indexB = getOrderIndex(b[0]);
+
+    // トップレベルの順番で比較
+    if (indexA !== indexB) {
+      return indexA - indexB;
+    }
+
+    // 同じ大分類の中では、カテゴリ名の辞書順で並べる
+    return a[0].localeCompare(b[0], "ja");
+  });
+
+  if (sortedCats.length === 0) {
+    statsContent.innerHTML = "統計データがありません。";
+    return;
+  }
+
+  const pMatch = window.location.pathname.match(/\/projects\/(\d+)/);
+  const currentProjectId = pMatch ? pMatch[1] : "18545";
+
+  let html = '<table id="ut-stats-table">';
+  html += "<tr><th>分類</th><th>進捗</th><th>件数</th></tr>";
+
+  sortedCats.forEach(([name, stats], index) => {
+    const percent = Math.round((stats.translated / stats.total) * 100);
+    const detailId = `ut-cat-detail-${index}`;
+
+    // カテゴリ行（クリックで詳細開閉）
+    html += `<tr class="ut-cat-row" style="cursor:pointer;" onclick="const el = document.getElementById('${detailId}'); el.style.display = el.style.display === 'none' ? 'table-row' : 'none';">
+      <td><span class="cat-name">${name}</span> <span style="font-size:10px; color:#666;">▼</span></td>
+      <td>
+        <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${percent}%"></div></div>
+        ${percent}%
+      </td>
+      <td>${stats.translated} / ${stats.total}</td>
+    </tr>`;
+
+    // 詳細リスト行（初期状態は非表示）
+    html += `<tr id="${detailId}" style="display:none;">
+      <td colspan="3" style="padding: 0; background: #111;">
+        <div style="max-height: 200px; overflow-y: auto; padding: 10px;">
+          <ul style="list-style: none; padding: 0; margin: 0; font-family: monospace; font-size: 11px;">`;
+
+    // キーの辞書順でソートして表示
+    stats.items
+      .sort((a, b) => a.key.localeCompare(b.key))
+      .forEach((item) => {
+        const color = item.isTranslated ? "#4caf50" : "#ffaaaa";
+        const url = `https://paratranz.cn/projects/${currentProjectId}/strings?id=${item.id}`;
+        // target="_blank" を付けて別タブで開くか、そのまま遷移するか。ParaTranzのルーター対策として標準のaタグで遷移させます。
+        html += `<li style="margin-bottom: 4px; padding-bottom: 4px; border-bottom: 1px solid #333;">
+        <a href="${url}" style="color:${color}; text-decoration:none;">📄 ${item.key}</a>
+      </li>`;
+      });
+
+    html += `     </ul>
+        </div>
+      </td>
+    </tr>`;
+  });
+
+  html += "</table>";
+  statsContent.innerHTML = html;
+}
 
 // End of script
