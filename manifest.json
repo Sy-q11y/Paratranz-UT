@@ -12,7 +12,13 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["assets/*"],
+      "resources": [
+        "assets/*",
+        "assets/bubbles/*",
+        "assets/faces/*",
+        "assets/fonts/*",
+        "assets/sounds/*"
+      ],
       "matches": ["*://paratranz.cn/*"]
     }
   ]

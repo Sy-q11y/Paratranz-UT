@@ -9,7 +9,7 @@ const UT_CONFIG = {
       antialias: false,
     },
     fnt_dotumche: {
-      fontFamily: "'BIZ UDPGothic', sans-serif",
+      fontFamily: "'BIZ UDGothic', sans-serif",
       sound: "snd_talk_default.wav",
       face: "",
     },

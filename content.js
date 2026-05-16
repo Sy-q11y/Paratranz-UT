@@ -191,7 +191,7 @@ Object.keys(UT_CONFIG.PRESETS).forEach((key) => {
 // Google Fonts 注入
 const googleFontLink = document.createElement("link");
 googleFontLink.href =
-  "https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap";
+  "https://fonts.googleapis.com/css2?family=BIZ+UDGothic:wght@400;700&display=swap";
 googleFontLink.rel = "stylesheet";
 document.head.appendChild(googleFontLink);
 
@@ -526,7 +526,7 @@ function applyMetadataSettings() {
   }
 
   // 表情 (p) の適用
-  if (m.p) {
+  if (m.p && m.p !== "false" && m.p !== "none") {
     const faceFile = m.p.endsWith(".gif") ? m.p : m.p + ".gif";
     if (currentConfig.face !== faceFile) {
       currentConfig.face = faceFile;
@@ -544,7 +544,7 @@ function applyMetadataSettings() {
       bId = bId.replace("obj_", "spr_");
     }
 
-    if (bId === "spr_dialoguebox") {
+    if (bId.startsWith("spr_dialogue")) {
       const isShop = /obj_(dialogue|text)_.*shop/.test(key);
       const targetMode = isShop ? "shop" : "normal";
       if (modeSelect.value !== targetMode) {
@@ -774,7 +774,7 @@ function applyLayoutAndStyle() {
 
   if (mode === "battle") {
     // バトルモード時は常に BIZ UDPGothic (Bold) を使用
-    textDisplay.style.fontFamily = "'BIZ UDPGothic', sans-serif";
+    textDisplay.style.fontFamily = "'BIZ UDGothic', sans-serif";
     textDisplay.style.fontWeight = "700";
     textDisplay.style.transform = "scaleX(0.8)";
     textDisplay.style.transformOrigin = "left top";
