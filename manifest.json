@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ParaTranz Undertale Previewer",
-  "version": "0.1.2.8",
+  "version": "0.1.3.0",
   "description": "ParaTranzで編集中のテキストをUndertale Yellow形式でプレビューします。",
   "permissions": ["storage"],
   "content_scripts": [

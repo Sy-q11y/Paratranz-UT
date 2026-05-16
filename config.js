@@ -59,7 +59,7 @@ const UT_CONFIG = {
     shop: {
       width: 700,
       height: 250,
-      padding: "30px",
+      padding: "20px 30px 30px 60px",
       letterSpacing: "0px",
       lineHeight: "1.2",
     },

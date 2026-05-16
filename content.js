@@ -501,10 +501,12 @@ function applyMetadataSettings() {
 
   let changed = false;
 
-  // メタデータがない場合はデフォルト状態（ノーマルモード）に戻す
+  // メタデータがない場合はデフォルト状態（ノーマルモードかショップ）に戻す
   if (!metadata[key]) {
-    if (modeSelect.value !== "normal") {
-      modeSelect.value = "normal";
+    const isShop = /obj_(dialogue|text)_.*shop/.test(key);
+    const targetMode = isShop ? "shop" : "normal";
+    if (modeSelect.value !== targetMode) {
+      modeSelect.value = targetMode;
       changed = true;
     }
     return changed;
@@ -543,8 +545,10 @@ function applyMetadataSettings() {
     }
 
     if (bId === "spr_dialoguebox") {
-      if (modeSelect.value !== "normal") {
-        modeSelect.value = "normal";
+      const isShop = /obj_(dialogue|text)_.*shop/.test(key);
+      const targetMode = isShop ? "shop" : "normal";
+      if (modeSelect.value !== targetMode) {
+        modeSelect.value = targetMode;
         changed = true;
       }
     } else {
@@ -560,9 +564,11 @@ function applyMetadataSettings() {
       }
     }
   } else {
-    // 吹き出し指定がない場合はノーマルモードへ戻す
-    if (modeSelect.value !== "normal") {
-      modeSelect.value = "normal";
+    // 吹き出し指定がない場合はキー名からノーマルかショップを判定
+    const isShop = /obj_(dialogue|text)_.*shop/.test(key);
+    const targetMode = isShop ? "shop" : "normal";
+    if (modeSelect.value !== targetMode) {
+      modeSelect.value = targetMode;
       changed = true;
     }
   }
