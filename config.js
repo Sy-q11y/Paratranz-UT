@@ -63,6 +63,14 @@ const UT_CONFIG = {
       letterSpacing: "0px",
       lineHeight: "1.2",
     },
+    // ⑤ ショップアイテム説明モード
+    shopItemDesc: {
+      width: 280,
+      height: 160,
+      padding: "28px",
+      letterSpacing: "0px",
+      lineHeight: "1.2",
+    },
   },
 
   // 演出の微調整

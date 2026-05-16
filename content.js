@@ -333,6 +333,7 @@ root.innerHTML = `
             <option value="normal">Normal Mode</option>
             <option value="battle">Battle Bubble Mode</option>
             <option value="shop">Shop Mode</option>
+            <option value="shopItemDesc">Shop Item Desc Mode</option>
         </select>
         <select id="ut-bubble-select" style="display:none;"></select>
         
@@ -501,10 +502,14 @@ function applyMetadataSettings() {
 
   let changed = false;
 
-  // メタデータがない場合はデフォルト状態（ノーマルモードかショップ）に戻す
+  // メタデータがない場合はデフォルト状態に戻す
   if (!metadata[key]) {
-    const isShop = /obj_(dialogue|text)_.*shop/.test(key);
-    const targetMode = isShop ? "shop" : "normal";
+    let targetMode = "normal";
+    if (/obj_text_item_description_shop/.test(key)) {
+      targetMode = "shopItemDesc";
+    } else if (/obj_(dialogue|text)_.*shop/.test(key)) {
+      targetMode = "shop";
+    }
     if (modeSelect.value !== targetMode) {
       modeSelect.value = targetMode;
       changed = true;
@@ -545,8 +550,12 @@ function applyMetadataSettings() {
     }
 
     if (bId.startsWith("spr_dialogue")) {
-      const isShop = /obj_(dialogue|text)_.*shop/.test(key);
-      const targetMode = isShop ? "shop" : "normal";
+      let targetMode = "normal";
+      if (/obj_text_item_description_shop/.test(key)) {
+        targetMode = "shopItemDesc";
+      } else if (/obj_(dialogue|text)_.*shop/.test(key)) {
+        targetMode = "shop";
+      }
       if (modeSelect.value !== targetMode) {
         modeSelect.value = targetMode;
         changed = true;
@@ -564,9 +573,13 @@ function applyMetadataSettings() {
       }
     }
   } else {
-    // 吹き出し指定がない場合はキー名からノーマルかショップを判定
-    const isShop = /obj_(dialogue|text)_.*shop/.test(key);
-    const targetMode = isShop ? "shop" : "normal";
+    // 吹き出し指定がない場合はキー名から判定
+    let targetMode = "normal";
+    if (/obj_text_item_description_shop/.test(key)) {
+      targetMode = "shopItemDesc";
+    } else if (/obj_(dialogue|text)_.*shop/.test(key)) {
+      targetMode = "shop";
+    }
     if (modeSelect.value !== targetMode) {
       modeSelect.value = targetMode;
       changed = true;
@@ -723,6 +736,7 @@ function applyLayoutAndStyle() {
   let layout;
   if (mode === "battle") layout = UT_CONFIG.LAYOUT.battleBubble;
   else if (mode === "shop") layout = UT_CONFIG.LAYOUT.shop;
+  else if (mode === "shopItemDesc") layout = UT_CONFIG.LAYOUT.shopItemDesc;
   else if (hasFace) layout = UT_CONFIG.LAYOUT.normalWithFace;
   else layout = UT_CONFIG.LAYOUT.normalWithoutFace;
 
