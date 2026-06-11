@@ -207,16 +207,16 @@ style.textContent = `
     }
     #ut-root:not(.ut-hidden) { pointer-events: auto; opacity: 1; }
     #ut-root.ut-hidden { opacity: 0; pointer-events: none; }
-    
+
     .ut-panel {
         background: black; color: white; padding: 8px 12px; border-radius: 0;
-        margin-bottom: 10px; display: flex; gap: 8px; align-items: center; 
+        margin-bottom: 10px; display: flex; gap: 8px; align-items: center;
         border: 2px solid white; box-shadow: 0 0 0 2px black;
         white-space: nowrap; flex-wrap: nowrap; transition: all 0.3s ease;
         font-family: 'UT-Font-Default', sans-serif;
     }
-    .ut-panel.ut-collapsed { 
-        height: 0; padding-top: 0; padding-bottom: 0; margin-bottom: 0; 
+    .ut-panel.ut-collapsed {
+        height: 0; padding-top: 0; padding-bottom: 0; margin-bottom: 0;
         overflow: hidden; opacity: 0; pointer-events: none; border: none; box-shadow: none;
     }
 
@@ -229,7 +229,7 @@ style.textContent = `
         z-index: 5; white-space: nowrap; display: none;
     }
     #ut-bunrui-tag.visible { display: block; }
-    
+
     #ut-settings-toggle-btn, #ut-play-btn, #ut-copy-btn, #ut-screenshot-btn, #ut-close-btn {
         position: absolute; top: -28px;
         background: black; color: white; border: 2px solid white;
@@ -243,7 +243,7 @@ style.textContent = `
     #ut-play-btn { right: 100px; }
     #ut-copy-btn { right: 165px; }
     #ut-screenshot-btn { right: 205px; }
-    
+
     #ut-settings-toggle-btn:hover, #ut-play-btn:hover, #ut-copy-btn:hover, #ut-screenshot-btn:hover, #ut-close-btn:hover { background: #333; }
     #ut-close-btn:hover { color: white; }
 
@@ -257,12 +257,12 @@ style.textContent = `
     #ut-drag-handle:active { cursor: grabbing; background: #333; }
 
     .ut-panel button, .ut-panel select {
-        background: black; color: white; border: 2px solid white; padding: 4px 8px; border-radius: 0; 
+        background: black; color: white; border: 2px solid white; padding: 4px 8px; border-radius: 0;
         cursor: pointer; font-size: 12px; flex-shrink: 0;
         font-family: 'UT-Font-Default', sans-serif;
     }
     .ut-panel button:hover, .ut-panel select:hover { background: #333; }
-    
+
     .ut-check-group {
         display: flex; align-items: center; gap: 4px; background: transparent;
         padding: 2px 6px; border-radius: 0; border: 2px solid white;
@@ -277,7 +277,7 @@ style.textContent = `
     #ut-face-img, #ut-face-still { max-width: 110px; max-height: 110px; width: auto; height: auto; margin-right: 20px; z-index: 2; flex-shrink: 0; }
     #ut-text-display { flex: 1; z-index: 2; white-space: pre; overflow: hidden; }
     .overflow-warning { border-color: red !important; box-shadow: 0 0 10px red !important; }
-    
+
     #ut-floating-open-btn {
         position: fixed; bottom: 20px; left: 50%; z-index: 9999; transform: translateX(-50%);
         background: #222; color: white; border: 2px solid white; border-radius: 20px;
@@ -286,7 +286,7 @@ style.textContent = `
     }
     #ut-floating-open-btn:hover { background: #333; transform: translateX(-50%) scale(1.05); }
     #ut-floating-open-btn.ut-hidden { transform: translate(-50%, 100px); opacity: 0; pointer-events: none; }
-    
+
     #ut-warnings-container {
         width: 100%; max-width: 700px; background: rgba(220, 50, 50, 0.95); color: white;
         padding: 10px 15px; border-radius: 5px; margin-top: 10px;
@@ -312,7 +312,7 @@ style.textContent = `
     #ut-stats-content::-webkit-scrollbar-track { background: #222; }
     #ut-stats-content::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
     #ut-stats-content::-webkit-scrollbar-thumb:hover { background: #777; }
-    
+
     #ut-stats-table { width: 100%; border-collapse: collapse; }
     #ut-stats-table th, #ut-stats-table td { padding: 6px 10px; border: 1px solid #444; text-align: left; }
     #ut-stats-table th { background: #222; color: #ffeb3b; position: sticky; top: 0; z-index: 10; }
@@ -336,14 +336,14 @@ root.innerHTML = `
             <option value="shopItemDesc">Shop Item Desc Mode</option>
         </select>
         <select id="ut-bubble-select" style="display:none;"></select>
-        
+
         <div class="ut-check-group">
             <button id="ut-style-check-btn" title="UTJP Style Check Mode">✔️ Check: ON</button>
             <button id="ut-style-lang-btn" title="言語切り替え">🌐 JP</button>
         </div>
-        
+
         <button id="ut-stats-toggle-btn" title="分類別進捗を表示"><img src="${chrome.runtime.getURL("assets/graph.png")}" style="width:14px; height:14px; vertical-align:middle;"></button>
-        
+
         <span id="ut-status"></span>
     </div>
     <div id="ut-stats-panel">
@@ -658,8 +658,8 @@ function runStyleCheck(text) {
   if (/["']/.test(checkText)) {
     warnings.push(msg.halfQuotes);
   }
-  // \u201d\u2019\u304c\u958b\u304d\u5f15\u7528\u7b26\u306a\u3057\u306b\u5148\u306b\u73fe\u308c\u308b\u5834\u5408\uff08\u9806\u756a\u9006\uff09\u3092\u691c\u77e5
-  if (/\u201d[^\u201d\u201c]*\u201c/.test(checkText)) {
+  // ”’が開き引用符なしに先に現れる場合（順番逆）を検知
+  if (/”[^”“]*“/.test(checkText)) {
     warnings.push(msg.wrongQuoteOrder);
   }
   if (/[？！](?![？！\n\r　)）]|$)/.test(checkText)) {
@@ -834,7 +834,7 @@ function applyLayoutAndStyle() {
           faceStillCanvas.style.display = "block";
           faceImg.style.display = "none";
         } else {
-          faceStillCanvas.style.display = "none";
+          faceStillCanvas.style.display = "block";
           faceImg.style.display = "block";
         }
       };
@@ -1203,6 +1203,25 @@ dragHandle.addEventListener("mousedown", (e) => {
   e.preventDefault();
 });
 
+dragHandle.addEventListener("touchstart", (e) => {
+  const touch = e.touches[0];
+  isDraggingBox = true;
+  dragStartX = touch.clientX;
+  dragStartY = touch.clientY;
+
+  const rect = root.getBoundingClientRect();
+  if (root.style.transform !== "none") {
+    root.style.transform = "none";
+    root.style.left = rect.left + "px";
+    root.style.top = rect.top + "px";
+    root.style.bottom = "auto";
+  }
+
+  initialLeft = parseFloat(root.style.left) || rect.left;
+  initialTop = parseFloat(root.style.top) || rect.top;
+  e.preventDefault();
+}, { passive: false });
+
 document.addEventListener("mousemove", (e) => {
   if (!isDraggingBox) return;
   const dx = e.clientX - dragStartX;
@@ -1212,32 +1231,28 @@ document.addEventListener("mousemove", (e) => {
   root.style.bottom = "auto";
 });
 
+document.addEventListener("touchmove", (e) => {
+  if (!isDraggingBox) return;
+  const touch = e.touches[0];
+  const dx = touch.clientX - dragStartX;
+  const dy = touch.clientY - dragStartY;
+  root.style.left = initialLeft + dx + "px";
+  root.style.top = initialTop + dy + "px";
+  root.style.bottom = "auto";
+  e.preventDefault();
+}, { passive: false });
+
 document.addEventListener("mouseup", () => {
   if (isDraggingBox) {
     isDraggingBox = false;
-    // 位置の記憶を無効化
-    /*
-    chrome.storage.local.set({
-      utPosX: root.style.left,
-      utPosY: root.style.top,
-      utPosBottom: root.style.bottom,
-      utTransform: root.style.transform
-    });
-    */
   }
 });
 
-// 保存された位置の復元（無効化）
-/*
-chrome.storage.local.get(["utPosX", "utPosY", "utPosBottom", "utTransform"], (res) => {
-  if (res.utPosX && res.utPosY) {
-    root.style.left = res.utPosX;
-    root.style.top = res.utPosY;
-    root.style.bottom = res.utPosBottom || "auto";
-    root.style.transform = res.utTransform || "none";
+document.addEventListener("touchend", () => {
+  if (isDraggingBox) {
+    isDraggingBox = false;
   }
 });
-*/
 
 const statsPanel = document.getElementById("ut-stats-panel");
 const statsContent = document.getElementById("ut-stats-content");
@@ -1337,13 +1352,11 @@ function updateStatsUI() {
       });
 
     html += `     </ul>
-        </div>
-      </td>
+        </div
+      </td
     </tr>`;
   });
 
   html += "</table>";
   statsContent.innerHTML = html;
 }
-
-// End of script
