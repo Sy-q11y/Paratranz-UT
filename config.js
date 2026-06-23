@@ -48,10 +48,12 @@ const UT_CONFIG = {
       lineHeight: "1.2",
     },
     // ③ バトルバブルモード
+    // 既定バブル spr_quote_bubble_battle は内部左壁が約25px(原寸)=50px(2x描画)。
+    // 余白を持たせて左パディング78px(=約39px原寸×2)に設定（53pxだと左に寄りすぎる）。
     battleBubble: {
       width: 680,
       height: 320,
-      padding: "18px 20px 10px 53px", // 左42px * 1.25 = 52.5px -> 53px
+      padding: "18px 20px 10px 78px",
       letterSpacing: "0px",
       lineHeight: "1.2",
     },

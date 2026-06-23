@@ -566,9 +566,12 @@ function applyMetadataSettings() {
         changed = true;
       }
       const bubbleName = bId.endsWith(".png") ? bId : bId + "_0.png";
-      if (bubbleSelect.value !== bubbleName) {
+      const bubbleUrl = chrome.runtime.getURL(`assets/bubbles/${bubbleName}`);
+      // バブル画像は src が未設定/不一致なら必ずセットする
+      // （メタデータのバブルがドロップダウン既定値と一致する場合でも空表示にならないように）
+      if (bubbleSelect.value !== bubbleName || bubbleImg.getAttribute("src") !== bubbleUrl) {
         bubbleSelect.value = bubbleName;
-        bubbleImg.src = chrome.runtime.getURL(`assets/bubbles/${bubbleName}`);
+        bubbleImg.src = bubbleUrl;
         changed = true;
       }
     }
